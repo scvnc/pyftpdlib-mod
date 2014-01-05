@@ -1170,6 +1170,60 @@ class TestFtpCmdsSemantic(TestCase):
                                self.client.sendcmd, 'stat /')
         self.client.sendcmd('quit')
 
+class TestCommandWithExplicitMethod(TestCase):
+    """
+    Verifies that a custom command which defines an explicit method
+    handler calls the explicitly defined method.
+    """
+
+    class TestFTPHandler(FTPHandler):
+        """
+        Defines custom proto_cmds which call a method
+        with an explicitly defined method name,
+        """
+
+        def __init__(self, *args, **kwargs):
+            FTPHandler.__init__(self, *args, **kwargs)
+
+            self.proto_cmds.update({
+
+                'SITE CUSTOMCMD': dict(
+                    perm='M', auth=True, arg=False,
+                    method_name='custom_function'),
+
+                'SITE CUSTOMMODE=MODE2': dict(
+                    perm='M', auth=True, arg=False,
+                    method_name='custom_function')
+            })
+
+        def custom_function(self, line):
+            self.respond('123 Hello from custom.')
+
+    server_class = FTPd
+    server_class.handler = TestFTPHandler
+
+    client_class = ftplib.FTP
+
+    def setUp(self):
+        self.server = self.server_class()
+        self.server.start()
+        self.client = self.client_class()
+        self.client.connect(self.server.host, self.server.port)
+        self.client.sock.settimeout(TIMEOUT)
+        self.client.login(USER, PASSWD)
+
+    def tearDown(self):
+        self.client.close()
+        self.server.stop()
+
+    def test_command_with_explicit_method_name(self):
+
+        for cmd in ['site customcmd', 'site custommode=mode2']:
+            self.client.putcmd(cmd)
+            resp = self.client.getmultiline()
+            self.assertEqual(
+                resp, '123 Hello from custom.',
+                'Did not recieve expected response from custom command.')
 
 class TestFtpFsOperations(TestCase):
 
@@ -2430,6 +2484,7 @@ class TestConfigurableOptions(TestCase):
         self.assertTrue(self.client.makepasv()[1] in _range)
         self.assertTrue(self.client.makepasv()[1] in _range)
         self.assertTrue(self.client.makepasv()[1] in _range)
+        self.assertTrue(self.client.makepasv()[1] in _range)
 
     @disable_log_warning
     def test_passive_ports_busy(self):
@@ -3624,6 +3679,7 @@ def test_main(tests=None):
             TestFtpAuthentication,
             TestFtpDummyCmds,
             TestFtpCmdsSemantic,
+            TestCommandWithExplicitMethod,
             TestFtpFsOperations,
             TestFtpStoreData,
             TestFtpRetrieveData,

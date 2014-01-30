@@ -1,3 +1,8 @@
+Disclaimer
+======
+This is a github fork from the google code SVN repository listed below. 
+This was forked to have the server API modified to accept non-standard SITE commands
+that could not cleanly map to a python method name.
 
 About
 =====

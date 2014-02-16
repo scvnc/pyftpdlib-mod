@@ -62,9 +62,11 @@ def get_version():
 
 
 name = 'pyftpdlib'
-version = get_version()
-download_url = ("http://pyftpdlib.googlecode.com/files/" + name + "-" +
-                version + ".tar.gz")
+
+# Appending scvncfork to help setuptools obtain the fork 
+version = get_version() + '-scvncfork'
+download_url = "https://github.com/scvnc/pyftpdlib-mod/archive/master.zip"
+                
 
 if sys.version_info < (2, 4):
     sys.exit('python version not supported (min 2.4)')
